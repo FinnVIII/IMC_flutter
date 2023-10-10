@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(IMCCalculatorApp());
@@ -22,35 +23,38 @@ class _IMCCalculatorState extends State<IMCCalculator> {
   double peso = 0.0;
   double altura = 0.0;
   List<String> historico = [];
+  @override
+  void initState() {
+    super.initState();
+    // Recupere o valor da altura do SharedPreferences
+    _getAlturaFromSharedPreferences();
+  }
 
-  void calcularIMC() {
+  // Método para recuperar o valor da altura do SharedPreferences
+  _getAlturaFromSharedPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    double savedAltura = prefs.getDouble('altura') ?? 0.0;
+    setState(() {
+      altura = savedAltura;
+    });
+  }
+
+  void calcularIMC() async {
     if (peso > 0 && altura > 0) {
       double imc = peso / (altura * altura);
       String estadoPeso;
 
-      if (imc < 16) {
-        estadoPeso = "Magreza grave";
-      } else if (imc >= 16 && imc < 17) {
-        estadoPeso = "Magreza moderada";
-      } else if (imc >= 17 && imc < 18.5) {
-        estadoPeso = "Magreza leve";
-      } else if (imc >= 18.5 && imc < 25) {
-        estadoPeso = "Saudável";
-      } else if (imc >= 25 && imc < 30) {
-        estadoPeso = "Sobrepeso";
-      } else if (imc >= 30 && imc < 35) {
-        estadoPeso = "Obesidade Grau I";
-      } else if (imc >= 35 && imc < 40) {
-        estadoPeso = "Obesidade Grau II";
-      } else {
-        estadoPeso = "Obesidade Grau III";
-      }
+      // ... Resto do seu código para calcular o IMC ...
 
       String resultado = "IMC: ${imc.toStringAsFixed(2)} - $estadoPeso";
 
       setState(() {
         historico.add(resultado);
       });
+
+      // Salve o valor da altura no SharedPreferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setDouble('altura', altura);
     }
   }
 
@@ -88,6 +92,9 @@ class _IMCCalculatorState extends State<IMCCalculator> {
                     TextField(
                       decoration: InputDecoration(labelText: 'Altura (m)'),
                       keyboardType: TextInputType.number,
+                      controller: TextEditingController(
+                          text: altura
+                              .toString()), // Preenche a caixa de texto com o valor da altura
                       onChanged: (value) {
                         altura = double.tryParse(value) ?? 0.0;
                       },
